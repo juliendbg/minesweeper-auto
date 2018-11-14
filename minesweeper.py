@@ -38,7 +38,7 @@ class Cell(object):
                 return ' ' if self.adjacent_mines == 0 else str(self.adjacent_mines)
 
 
-class Game(object):
+class Minesweeper(object):
     def __init__(self, width=10, height=10, mine_count=10):
         self.width = width
         self.height = height
@@ -83,48 +83,19 @@ class Game(object):
 
     def reveal(self, x, y):
         if self.is_won():
-            return
+            return False
         if self.is_lost():
-            return
+            return False
         cell = self.get_cell(x, y)
         if cell.revealed:
-            return
+            return False
         cell.revealed = True
-        if cell.has_mine:
-            self.print_grid()
-            print('You lost!')
-        else:
+        if not cell.has_mine:
             self.auto_reveal_cells()
-            if self.is_won():
-                print('You won!')
-            self.print_grid()
+        return True
 
     def auto_reveal_cells(self):
         while any(cell.is_revealable() for cell in self.board):
             for cell in self.board:
                 if cell.is_revealable():
                     cell.revealed = True
-
-    def print_grid(self):
-        grid = '+---' * self.width + '+\n'
-        for index, cell in enumerate(self.board):
-            if index != 0 and index % self.width == 0:
-                grid += '|\n'
-                grid += '+---' * self.width + '+\n'
-            grid += '| {} '.format(cell.display())
-        grid += '|\n'
-        grid += '+---' * self.width + '+\n'
-        print(grid)
-
-
-if __name__ == '__main__':
-    game = Game()
-    game.print_grid()
-    while not game.is_lost() and not game.is_won():
-        x = input('Choose an x\n> ')
-        y = input('Choose an y\n> ')
-        try:
-            game.reveal(int(x), int(y))
-        except TypeError:
-            print("x and y must be integers")
-    exit(0)
