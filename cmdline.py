@@ -1,14 +1,28 @@
-from minesweeper import Minesweeper
+from minesweeper import Minesweeper, Cell
 
 
 class CmdlineClient(Minesweeper):
+    @staticmethod
+    def display_cell(cell):
+        status = cell.status()
+        if status == Cell.Status.FLAGGED:
+            return 'o'
+        if status == Cell.Status.HIDDEN:
+            return '#'
+        if status == Cell.Status.MINE:
+            return 'x'
+        if status == Cell.Status.REVEALED:
+            return ' ' if cell.adjacent_mines == 0 else str(cell.adjacent_mines)
+        else:
+            return '?'
+
     def print_grid(self):
         grid = '+---' * self.width + '+\n'
         for index, cell in enumerate(self.board):
             if index != 0 and index % self.width == 0:
                 grid += '|\n'
                 grid += '+---' * self.width + '+\n'
-            grid += '| {} '.format(cell.display())
+            grid += '| {} '.format(self.display_cell(cell))
         grid += '|\n'
         grid += '+---' * self.width + '+\n'
         print(grid)
@@ -26,7 +40,7 @@ class CmdlineClient(Minesweeper):
 
 
 if __name__ == '__main__':
-    game = CmdlineClient(10, 10, 50)
+    game = CmdlineClient()
     game.print_grid()
     while not game.is_lost() and not game.is_won():
         x = input('Choose an x\n> ')

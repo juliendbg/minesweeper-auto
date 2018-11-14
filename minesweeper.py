@@ -1,18 +1,26 @@
 import random
+from enum import Enum, auto
 from math import floor
 
 
 class Cell(object):
-    def __init__(self, game, x, y, revealed=False, has_mine=False, adjacent_mines=0):
+    class Status(Enum):
+        REVEALED = auto()
+        FLAGGED = auto()
+        HIDDEN = auto()
+        MINE = auto()
+
+    def __init__(self, game, x, y, has_mine=False, revealed=False):
         self.game = game
-        self.revealed = revealed
-        self.has_mine = has_mine
-        self.adjacent_mines = adjacent_mines
         self.x = x
         self.y = y
+        self.has_mine = has_mine
+        self.revealed = revealed
+        self.flagged = False
+        self.adjacent_mines = 0
 
     def is_revealable(self):
-        if self.revealed:
+        if self.revealed or self.flagged:
             return False
         surroundings = self.get_surroundings()
         return any(cell.revealed and cell.adjacent_mines == 0 and not cell.has_mine for cell in surroundings)
@@ -28,14 +36,16 @@ class Cell(object):
                  if 0 <= _x < self.game.width and 0 <= _y < self.game.height]
         return cells
 
-    def display(self):
+    def status(self):
+        if self.flagged:
+            return Cell.Status.FLAGGED
         if not self.revealed:
-            return '#'
+            return Cell.Status.HIDDEN
         if self.revealed:
             if self.has_mine:
-                return 'x'
+                return Cell.Status.MINE
             else:
-                return ' ' if self.adjacent_mines == 0 else str(self.adjacent_mines)
+                return Cell.Status.REVEALED
 
 
 class Minesweeper(object):
@@ -87,6 +97,8 @@ class Minesweeper(object):
         if self.is_lost():
             return False
         cell = self.get_cell(x, y)
+        if cell.flagged:
+            return False
         if cell.revealed:
             return False
         cell.revealed = True
