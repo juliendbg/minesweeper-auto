@@ -104,11 +104,27 @@ class Minesweeper(object):
         if cell.flagged:
             return False
         if cell.revealed:
-            return False
+            return self.auto_reveal_if_completed(cell)
         cell.revealed = True
         if not cell.has_mine:
             self.auto_reveal_cells()
         return True
+
+    def auto_reveal_if_completed(self, cell):
+        surroundings = cell.get_surroundings()
+        flag_count = len([cell for cell in surroundings if cell.flagged])
+        if not flag_count == cell.adjacent_mines:
+            return False
+
+        has_revealed = False
+        unrevealed = [cell for cell in surroundings if not cell.revealed and not cell.flagged]
+        for cell in unrevealed:
+            cell.revealed = True
+            if not cell.has_mine:
+                self.auto_reveal_cells()
+            has_revealed = True
+
+        return has_revealed
 
     def auto_reveal_cells(self):
         while any(cell.is_revealable() for cell in self.board):

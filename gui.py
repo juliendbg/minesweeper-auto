@@ -2,76 +2,94 @@ from tkinter import *
 
 from minesweeper import Minesweeper
 
-CELL_WIDTH = 16
-CELL_HEIGHT = 16
 
-game = Minesweeper()
+class MinesweeperGui(object):
+    CELL_WIDTH = 16
+    CELL_HEIGHT = 16
 
-canvas_width = CELL_WIDTH * game.width
-canvas_height = CELL_HEIGHT * game.height
+    number_colors = {
+        1: 'blue',
+        2: 'green',
+        3: 'red'
+    }
 
-master = Tk()
+    def __init__(self, root):
+        self.root = root
+        root.title("Minesweeper")
 
-header = Label(master, text="Minesweeper")
-header.grid(row=0)
-canvas = Canvas(master, width=canvas_width, height=canvas_height)
-canvas.grid(row=1)
+        self.header = Label(self.root, text="")
+        self.header.grid(row=0)
+        self.header.bind("<Button-1>", lambda e: self.init_game())
 
-gui_cells = {}
+        self.game = None
+        self.canvas = None
+        self.gui_cells = None
 
-number_colors = {
-    1: 'blue',
-    2: 'green',
-    3: 'red'
-}
+        self.init_game()
+
+    def init_game(self):
+        self.game = Minesweeper()
+        self.header['text'] = 'Minesweeper'
+
+        self.gui_cells = {}
+
+        canvas_width = self.CELL_WIDTH * self.game.width
+        canvas_height = self.CELL_HEIGHT * self.game.height
+
+        self.canvas = Canvas(self.root, width=canvas_width, height=canvas_height)
+        self.canvas.grid(row=1)
+
+        self.draw_canvas()
+
+    def draw_canvas(self):
+        for cell in self.game.board:
+            cell.object_id = self.canvas.create_rectangle(cell.x * self.CELL_WIDTH, cell.y * self.CELL_HEIGHT,
+                                                          (cell.x + 1) * self.CELL_WIDTH,
+                                                          (cell.y + 1) * self.CELL_HEIGHT,
+                                                          fill="grey", outline="black")
+            self.canvas.tag_bind(cell.object_id, sequence='<Button-1>', func=self.left_click_callback)
+            self.canvas.tag_bind(cell.object_id, sequence='<Button-2>', func=self.right_click_callback)
+            self.gui_cells[cell.object_id] = cell
+
+    def left_click_callback(self, event):
+        cell = self.gui_cells[event.widget.find_closest(event.x, event.y)[0]]
+        print('Got left click on ', cell)
+        res = self.game.reveal(cell.x, cell.y)
+        if res:
+            for object_id, cell in self.gui_cells.items():
+                if cell.flagged:
+                    self.canvas.itemconfigure(object_id, fill='orange')
+                    continue
+                elif not cell.revealed:
+                    continue
+
+                if cell.has_mine:
+                    self.canvas.itemconfigure(object_id, fill='red')
+                elif cell.adjacent_mines == 0:
+                    self.canvas.itemconfigure(object_id, fill='white')
+                else:
+                    self.canvas.delete(object_id)
+                    text_x = cell.x * self.CELL_WIDTH + self.CELL_WIDTH / 2
+                    text_y = cell.y * self.CELL_HEIGHT + self.CELL_HEIGHT / 2
+                    del self.gui_cells[cell.object_id]
+                    cell.object_id = self.canvas.create_text((text_x, text_y),
+                                                             text=str(cell.adjacent_mines),
+                                                             fill=self.number_colors.get(cell.adjacent_mines, 'black'))
+                    self.canvas.tag_bind(cell.object_id, sequence='<Button-1>', func=self.left_click_callback)
+                    self.canvas.tag_bind(cell.object_id, sequence='<Button-2>', func=self.right_click_callback)
+                    self.gui_cells[cell.object_id] = cell
+            if self.game.is_won():
+                self.header['text'] = 'You won!'
+            elif self.game.is_lost():
+                self.header['text'] = 'You lost!'
+
+    def right_click_callback(self, event):
+        cell = self.gui_cells[event.widget.find_closest(event.x, event.y)[0]]
+        print('Got right click on ', cell)
+        cell.flagged = not cell.flagged
+        self.canvas.itemconfigure(cell.object_id, fill='orange' if cell.flagged else 'grey')
 
 
-def left_click_callback(event):
-    cell = gui_cells[event.widget.find_closest(event.x, event.y)[0]]
-    print('Got left click on ', cell)
-    res = game.reveal(cell.x, cell.y)
-    if res:
-        for object_id, cell in gui_cells.items():
-            if cell.flagged:
-                canvas.itemconfigure(object_id, fill='orange')
-                continue
-            elif not cell.revealed:
-                continue
-
-            if cell.has_mine:
-                canvas.itemconfigure(object_id, fill='red')
-            elif cell.adjacent_mines == 0:
-                canvas.itemconfigure(object_id, fill='white')
-            else:
-                canvas.delete(object_id)
-                text_x = cell.x * CELL_WIDTH + CELL_WIDTH / 2
-                text_y = cell.y * CELL_HEIGHT + CELL_HEIGHT / 2
-                del gui_cells[cell.object_id]
-                cell.object_id = canvas.create_text((text_x, text_y),
-                                                    text=str(cell.adjacent_mines),
-                                                    fill=number_colors.get(cell.adjacent_mines, 'black'))
-                canvas.tag_bind(cell.object_id, sequence='<Button-1>', func=left_click_callback)
-                canvas.tag_bind(cell.object_id, sequence='<Button-2>', func=right_click_callback)
-                gui_cells[cell.object_id] = cell
-        if game.is_won():
-            header['text'] = 'You won!'
-        elif game.is_lost():
-            header['text'] = 'You lost!'
-
-
-def right_click_callback(event):
-    cell = gui_cells[event.widget.find_closest(event.x, event.y)[0]]
-    print('Got right click on ', cell)
-    cell.flagged = not cell.flagged
-    canvas.itemconfigure(cell.object_id, fill='orange' if cell.flagged else 'grey')
-
-
-for cell in game.board:
-    cell.object_id = canvas.create_rectangle(cell.x * CELL_WIDTH, cell.y * CELL_HEIGHT,
-                                             (cell.x + 1) * CELL_WIDTH, (cell.y + 1) * CELL_HEIGHT,
-                                             fill="grey", outline="black")
-    canvas.tag_bind(cell.object_id, sequence='<Button-1>', func=left_click_callback)
-    canvas.tag_bind(cell.object_id, sequence='<Button-2>', func=right_click_callback)
-    gui_cells[cell.object_id] = cell
-
-mainloop()
+root = Tk()
+gui = MinesweeperGui(root)
+root.mainloop()
