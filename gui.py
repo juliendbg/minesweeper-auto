@@ -32,6 +32,14 @@ class MinesweeperGui(object):
         root.title('Minesweeper')
         root.resizable(False, False)
 
+        menubar = Menu(root)
+        new_menu = Menu(menubar, tearoff=0)
+        new_menu.add_command(label='Easy', command=lambda: self.init_game(10, 10, 10))
+        new_menu.add_command(label='Medium', command=lambda: self.init_game(16, 16, 40))
+        new_menu.add_command(label='Hard', command=lambda: self.init_game(24, 24, 99))
+        menubar.add_cascade(label="New", menu=new_menu)
+        root.config(menu=menubar)
+
         self.header = Label(self.root, text='', width=12)
         self.header.grid(row=0, column=1)
         self.header.bind('<Button-1>', lambda e: self.init_game())
@@ -44,8 +52,12 @@ class MinesweeperGui(object):
 
         self.init_game()
 
-    def init_game(self):
-        self.game = Minesweeper(10, 10, 10)
+    def init_game(self, width=10, height=10, mine_count=10):
+        if self.canvas:
+            self.canvas.grid_forget()
+            self.canvas = None
+
+        self.game = Minesweeper(width, height, mine_count)
         self.header['text'] = 'Minesweeper'
         self.score['text'] = self.game.mine_count
 
@@ -95,6 +107,13 @@ class MinesweeperGui(object):
             self.canvas.tag_bind(object_id, sequence='<Button-2>', func=self.right_click_callback)
             cell.object_ids.append(object_id)
 
+    def show_mines(self):
+        for cell in self.game.board:
+            if cell.has_mine:
+                text_x = self.PADDING + cell.x * self.CELL_WIDTH + self.CELL_WIDTH / 2
+                text_y = self.PADDING + cell.y * self.CELL_HEIGHT + self.CELL_HEIGHT / 2
+                self.canvas.create_text((text_x, text_y), text='x', fill='black')
+
     def left_click_callback(self, event):
         object_id = event.widget.find_closest(event.x, event.y)[0]
         cell = self.get_cell(object_id)
@@ -108,6 +127,7 @@ class MinesweeperGui(object):
                 self.score['text'] = '0'
             elif self.game.is_lost():
                 self.header['text'] = 'You lost!'
+                self.show_mines()
 
     def right_click_callback(self, event):
         object_id = event.widget.find_closest(event.x, event.y)[0]
