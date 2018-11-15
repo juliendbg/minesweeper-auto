@@ -12,8 +12,10 @@ canvas_height = CELL_HEIGHT * game.height
 
 master = Tk()
 
+header = Label(master, text="Minesweeper")
+header.grid(row=0)
 canvas = Canvas(master, width=canvas_width, height=canvas_height)
-canvas.pack()
+canvas.grid(row=1)
 
 gui_cells = {}
 
@@ -51,6 +53,10 @@ def left_click_callback(event):
                 canvas.tag_bind(cell.object_id, sequence='<Button-1>', func=left_click_callback)
                 canvas.tag_bind(cell.object_id, sequence='<Button-2>', func=right_click_callback)
                 gui_cells[cell.object_id] = cell
+        if game.is_won():
+            header['text'] = 'You won!'
+        elif game.is_lost():
+            header['text'] = 'You lost!'
 
 
 def right_click_callback(event):
