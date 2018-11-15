@@ -19,6 +19,10 @@ class Cell(object):
         self.flagged = False
         self.adjacent_mines = 0
 
+    def __str__(self):
+        return 'Cell(x={}, y={}, has_mine={}, revealed={}, flagged={})'.format(
+            self.x, self.y, self.has_mine, self.revealed, self.flagged)
+
     def is_revealable(self):
         if self.revealed or self.flagged:
             return False
