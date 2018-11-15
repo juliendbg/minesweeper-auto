@@ -110,6 +110,17 @@ class Minesweeper(object):
             self.auto_reveal_cells()
         return True
 
+    def flag(self, x, y):
+        if self.is_won():
+            return False
+        if self.is_lost():
+            return False
+        cell = self.get_cell(x, y)
+        if cell.revealed:
+            return False
+        cell.flagged = not cell.flagged
+        return True
+
     def auto_reveal_if_completed(self, cell):
         surroundings = cell.get_surroundings()
         flag_count = len([cell for cell in surroundings if cell.flagged])
