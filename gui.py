@@ -32,9 +32,12 @@ class MinesweeperGui(object):
         root.title('Minesweeper')
         root.resizable(False, False)
 
-        self.header = Label(self.root, text='')
-        self.header.grid(row=0)
+        self.header = Label(self.root, text='', width=12)
+        self.header.grid(row=0, column=1)
         self.header.bind('<Button-1>', lambda e: self.init_game())
+
+        self.score = Label(self.root, text='', width=4)
+        self.score.grid(row=0, column=0)
 
         self.game = None
         self.canvas = None
@@ -42,14 +45,15 @@ class MinesweeperGui(object):
         self.init_game()
 
     def init_game(self):
-        self.game = Minesweeper()
+        self.game = Minesweeper(10, 10, 10)
         self.header['text'] = 'Minesweeper'
+        self.score['text'] = self.game.mine_count
 
         canvas_width = self.CELL_WIDTH * self.game.width
         canvas_height = self.CELL_HEIGHT * self.game.height
 
         self.canvas = Canvas(self.root, width=canvas_width + self.PADDING, height=canvas_height + self.PADDING)
-        self.canvas.grid(row=1, padx=self.PADDING, pady=self.PADDING)
+        self.canvas.grid(row=1, columnspan=2, padx=self.PADDING, pady=self.PADDING)
 
         self.draw_canvas()
 
@@ -101,6 +105,7 @@ class MinesweeperGui(object):
                 self.draw_cell(cell)
             if self.game.is_won():
                 self.header['text'] = 'You won!'
+                self.score['text'] = '0'
             elif self.game.is_lost():
                 self.header['text'] = 'You lost!'
 
@@ -110,6 +115,7 @@ class MinesweeperGui(object):
         # print('Got right click on ', cell)
         res = self.game.flag(cell.x, cell.y)
         if res:
+            self.score['text'] = self.game.mine_count - len([cell for cell in self.game.board if cell.flagged])
             self.draw_cell(cell)
 
     def get_cell(self, object_id):
