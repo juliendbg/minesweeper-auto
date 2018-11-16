@@ -16,7 +16,7 @@ class MinesweeperAi(object):
 
     def run(self):
         start_ts = floor(time() * 1000)
-        print("Time since last frame: {} ms".format(start_ts - self.end_ts))
+        # print("Time since last frame: {} ms".format(start_ts - self.end_ts))
 
         if self.gui.game != self.game:
             print('Game has changed!')
@@ -38,14 +38,14 @@ class MinesweeperAi(object):
             step = 'reveal'
 
         if not changed:
-            self.random_guess()
+            #self.random_guess()
             step = 'random'
 
         self.end_ts = floor(time() * 1000)
         elapsed = self.end_ts - start_ts
-        print("Step '{}' frame time: {} ms".format(step, elapsed))
+        # print("Step '{}' frame time: {} ms".format(step, elapsed))
 
-        next_in = max(100 - elapsed, 1)
+        next_in = max(10 - elapsed, 1)
         self.root.after(next_in, self.run)
 
     def random_guess(self):
