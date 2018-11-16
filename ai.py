@@ -12,13 +12,11 @@ class MinesweeperAi(object):
         self.gui = gui
         self.game = None
         self.board = None
-        self.last_run = None
+        self.end_ts = floor(time() * 1000)
 
     def run(self):
-        timestamp = floor(time() * 1000)
-        if self.last_run:
-            print('Frame time: {} ms'.format(timestamp - self.last_run))
-        self.last_run = timestamp
+        start_ts = floor(time() * 1000)
+        print("Time since last frame: {} ms".format(start_ts - self.end_ts))
 
         if self.gui.game != self.game:
             print('Game has changed!')
@@ -33,14 +31,20 @@ class MinesweeperAi(object):
             return
 
         changed = self.flag_obvious_spots()
+        step = 'flag'
 
         if not changed:
             changed = self.reveal_obvious_spots()
+            step = 'reveal'
 
         if not changed:
             self.random_guess()
+            step = 'random'
 
         self.root.after(100, self.run)
+
+        self.end_ts = floor(time() * 1000)
+        print("Step '{}' frame time: {} ms".format(step, self.end_ts - start_ts))
 
     def random_guess(self):
         playable = [_cell for _cell in self.board if _cell.is_playable()]
