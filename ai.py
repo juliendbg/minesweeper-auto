@@ -35,7 +35,6 @@ class MinesweeperAi(object):
         y = randint(0, self.game.height - 1)
         print('Trying random guess: {}, {}'.format(x, y))
         self.gui.reveal(x, y)
-        self.root.after(100, self.run)
 
     def flag_obvious_spots(self):
         print('Flagging obvious spots')

@@ -52,7 +52,17 @@ class MinesweeperGui(object):
 
         self.init_game()
 
-    def init_game(self, width=10, height=10, mine_count=10):
+    def init_game(self, width=None, height=None, mine_count=None):
+        if not width or not height or not mine_count:
+            if self.game:
+                width = self.game.width
+                height = self.game.height
+                mine_count = self.game.mine_count
+            else:
+                width = width or 10
+                height = height or 10
+                mine_count = mine_count or 10
+
         if self.canvas:
             self.canvas.grid_forget()
             self.canvas = None
