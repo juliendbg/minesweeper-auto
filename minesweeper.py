@@ -17,6 +17,7 @@ class Cell(object):
         self.revealed = revealed
         self.flagged = False
         self.adjacent_mines = 0
+        self.updated = True
 
     def __str__(self):
         return 'Cell({}, x={}, y={}, has_mine={}, revealed={}, flagged={})'.format(
@@ -114,6 +115,7 @@ class Minesweeper(object):
         if cell.revealed:
             return self.auto_reveal_if_completed(cell)
         cell.revealed = True
+        cell.updated = True
         if not cell.has_mine:
             self.auto_reveal_cells()
         return True
@@ -127,6 +129,7 @@ class Minesweeper(object):
         if cell.revealed:
             return False
         cell.flagged = not cell.flagged
+        cell.updated = True
         return True
 
     def auto_reveal_if_completed(self, cell):
@@ -139,6 +142,7 @@ class Minesweeper(object):
         unrevealed = [cell for cell in surroundings if not cell.revealed and not cell.flagged]
         for cell in unrevealed:
             cell.revealed = True
+            cell.updated = True
             if not cell.has_mine:
                 self.auto_reveal_cells()
             has_revealed = True
@@ -150,3 +154,4 @@ class Minesweeper(object):
             for cell in self.board:
                 if cell.is_revealable():
                     cell.revealed = True
+                    cell.updated = True

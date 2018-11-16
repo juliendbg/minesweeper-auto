@@ -41,10 +41,12 @@ class MinesweeperAi(object):
             self.random_guess()
             step = 'random'
 
-        self.root.after(100, self.run)
-
         self.end_ts = floor(time() * 1000)
-        print("Step '{}' frame time: {} ms".format(step, self.end_ts - start_ts))
+        elapsed = self.end_ts - start_ts
+        print("Step '{}' frame time: {} ms".format(step, elapsed))
+
+        next_in = max(100 - elapsed, 1)
+        self.root.after(next_in, self.run)
 
     def random_guess(self):
         playable = [_cell for _cell in self.board if _cell.is_playable()]

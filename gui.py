@@ -81,7 +81,9 @@ class MinesweeperGui(object):
 
     def draw_canvas(self):
         for cell in self.game.board:
-            self.draw_cell(cell)
+            if cell.updated:
+                self.draw_cell(cell)
+                cell.updated = False
 
     def draw_cell(self, cell):
         if not hasattr(cell, 'object_ids'):
@@ -133,8 +135,7 @@ class MinesweeperGui(object):
     def reveal(self, x, y):
         res = self.game.reveal(x, y)
         if res:
-            for cell in self.game.board:
-                self.draw_cell(cell)
+            self.draw_canvas()
             if self.game.is_won():
                 self.header['text'] = 'You won!'
                 self.score['text'] = '0'
