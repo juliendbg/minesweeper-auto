@@ -1,4 +1,4 @@
-from tkinter import *
+from tkinter import Menu, Label, Canvas, Tk
 
 from minesweeper import Minesweeper, Cell
 
@@ -118,7 +118,10 @@ class MinesweeperGui(object):
         object_id = event.widget.find_closest(event.x, event.y)[0]
         cell = self.get_cell(object_id)
         # print('Got left click on ', cell)
-        res = self.game.reveal(cell.x, cell.y)
+        self.reveal(cell.x, cell.y)
+
+    def reveal(self, x, y):
+        res = self.game.reveal(x, y)
         if res:
             for cell in self.game.board:
                 self.draw_cell(cell)
@@ -128,15 +131,19 @@ class MinesweeperGui(object):
             elif self.game.is_lost():
                 self.header['text'] = 'You lost!'
                 self.show_mines()
+        return res
 
     def right_click_callback(self, event):
         object_id = event.widget.find_closest(event.x, event.y)[0]
         cell = self.get_cell(object_id)
         # print('Got right click on ', cell)
-        res = self.game.flag(cell.x, cell.y)
+        self.flag(cell.x, cell.y)
+
+    def flag(self, x, y):
+        res = self.game.flag(x, y)
         if res:
             self.score['text'] = self.game.mine_count - len([cell for cell in self.game.board if cell.flagged])
-            self.draw_cell(cell)
+            self.draw_cell(self.game.get_cell(x, y))
 
     def get_cell(self, object_id):
         for cell in self.game.board:
@@ -145,6 +152,7 @@ class MinesweeperGui(object):
         raise Exception('{} not found in cells'.format(object_id))
 
 
-root = Tk()
-gui = MinesweeperGui(root)
-root.mainloop()
+if __name__ == '__main__':
+    root = Tk()
+    gui = MinesweeperGui(root)
+    root.mainloop()

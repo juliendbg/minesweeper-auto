@@ -19,8 +19,17 @@ class Cell(object):
         self.adjacent_mines = 0
 
     def __str__(self):
-        return 'Cell(x={}, y={}, has_mine={}, revealed={}, flagged={})'.format(
-            self.x, self.y, self.has_mine, self.revealed, self.flagged)
+        return 'Cell({}, x={}, y={}, has_mine={}, revealed={}, flagged={})'.format(
+            self.status(), self.x, self.y, self.has_mine, self.revealed, self.flagged)
+
+    def is_revealed(self):
+        return self.revealed
+
+    def is_playable(self):
+        return not self.revealed and not self.flagged
+
+    def is_flagged(self):
+        return self.flagged
 
     def is_revealable(self):
         if self.revealed or self.flagged:
