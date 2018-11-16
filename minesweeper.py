@@ -1,14 +1,13 @@
 import random
-from enum import Enum, auto
+from enum import Enum
 from math import floor
 
 
 class Cell(object):
     class Status(Enum):
-        REVEALED = auto()
-        FLAGGED = auto()
-        HIDDEN = auto()
-        MINE = auto()
+        FLAGGED = 'F'
+        HIDDEN = 'H'
+        MINE = 'M'
 
     def __init__(self, game, x, y, has_mine=False, revealed=False):
         self.game = game
@@ -45,11 +44,11 @@ class Cell(object):
             return Cell.Status.FLAGGED
         if not self.revealed:
             return Cell.Status.HIDDEN
-        if self.revealed:
+        else:
             if self.has_mine:
                 return Cell.Status.MINE
             else:
-                return Cell.Status.REVEALED
+                return self.adjacent_mines
 
 
 class Minesweeper(object):

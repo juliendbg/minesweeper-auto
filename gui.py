@@ -1,6 +1,6 @@
 from tkinter import *
 
-from minesweeper import Minesweeper
+from minesweeper import Minesweeper, Cell
 
 
 class MinesweeperGui(object):
@@ -84,16 +84,16 @@ class MinesweeperGui(object):
             self.canvas.tag_bind(object_id, sequence='<Button-2>', func=self.right_click_callback)
             cell.object_ids = [object_id]
 
-        if cell.flagged:
+        if cell.status() == Cell.Status.FLAGGED:
             self.canvas.itemconfigure(cell.object_ids[0], fill=self.Colors.FLAGGED)
             return
-        if not cell.revealed:
+        if cell.status() == Cell.Status.HIDDEN:
             self.canvas.itemconfigure(cell.object_ids[0], fill=self.Colors.HIDDEN)
             return
 
-        if cell.has_mine:
+        if cell.status() == Cell.Status.MINE:
             self.canvas.itemconfigure(cell.object_ids[0], fill=self.Colors.MINE)
-        elif cell.adjacent_mines == 0:
+        elif cell.status() == 0:
             self.canvas.itemconfigure(cell.object_ids[0], fill=self.Colors.REVEALED)
         else:
             self.canvas.itemconfigure(cell.object_ids[0], fill=self.Colors.REVEALED)
@@ -101,7 +101,7 @@ class MinesweeperGui(object):
             text_y = self.PADDING + cell.y * self.CELL_HEIGHT + self.CELL_HEIGHT / 2
             object_id = self.canvas.create_text((text_x, text_y),
                                                 text=str(cell.adjacent_mines),
-                                                fill=self.NUM_COLORS.get(cell.adjacent_mines,
+                                                fill=self.NUM_COLORS.get(cell.status(),
                                                                          self.NUM_COLORS['default']))
             self.canvas.tag_bind(object_id, sequence='<Button-1>', func=self.left_click_callback)
             self.canvas.tag_bind(object_id, sequence='<Button-2>', func=self.right_click_callback)

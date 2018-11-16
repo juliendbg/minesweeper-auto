@@ -11,10 +11,8 @@ class CmdlineClient(Minesweeper):
             return '#'
         if status == Cell.Status.MINE:
             return 'x'
-        if status == Cell.Status.REVEALED:
-            return ' ' if cell.adjacent_mines == 0 else str(cell.adjacent_mines)
         else:
-            return '?'
+            return ' ' if status == 0 else str(status)
 
     def print_grid(self):
         grid = '+---' * self.width + '+\n'
