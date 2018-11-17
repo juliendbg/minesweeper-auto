@@ -38,7 +38,7 @@ class MinesweeperAi(object):
             step = 'reveal'
 
         if not changed:
-            #self.random_guess()
+            # self.random_guess()
             step = 'random'
 
         self.end_ts = floor(time() * 1000)

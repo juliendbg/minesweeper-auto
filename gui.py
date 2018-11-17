@@ -37,6 +37,7 @@ class MinesweeperGui(object):
         new_menu.add_command(label='Easy', command=lambda: self.init_game(10, 10, 10))
         new_menu.add_command(label='Medium', command=lambda: self.init_game(16, 16, 40))
         new_menu.add_command(label='Hard', command=lambda: self.init_game(24, 24, 99))
+        new_menu.add_command(label='Extreme', command=lambda: self.init_game(75, 50, 650))
         menubar.add_cascade(label="New", menu=new_menu)
         root.config(menu=menubar)
 
