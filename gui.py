@@ -27,19 +27,20 @@ class MinesweeperGui(object):
         MINE = 'red'
         OUTLINE = 'black'
 
-    def __init__(self, root):
-        self.root = root
-        root.title('Minesweeper')
-        root.resizable(False, False)
+    def __init__(self, master):
+        self.root = master
 
-        menubar = Menu(root)
+        self.root.title('Minesweeper')
+        self.root.resizable(False, False)
+
+        menubar = Menu(self.root)
         new_menu = Menu(menubar, tearoff=0)
         new_menu.add_command(label='Easy', command=lambda: self.init_game(10, 10, 10))
         new_menu.add_command(label='Medium', command=lambda: self.init_game(16, 16, 40))
         new_menu.add_command(label='Hard', command=lambda: self.init_game(24, 24, 99))
         new_menu.add_command(label='Extreme', command=lambda: self.init_game(75, 50, 650))
         menubar.add_cascade(label="New", menu=new_menu)
-        root.config(menu=menubar)
+        self.root.config(menu=menubar)
 
         self.header = Label(self.root, text='', width=12)
         self.header.grid(row=0, column=1)
