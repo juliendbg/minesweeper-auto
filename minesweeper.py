@@ -29,6 +29,12 @@ class Cell(object):
     def is_playable(self):
         return not self.revealed and not self.flagged
 
+    def is_constrained(self):
+        if not self.is_playable():
+            return False
+
+        return any(cell.revealed for cell in self.get_surroundings())
+
     def is_flagged(self):
         return self.flagged
 

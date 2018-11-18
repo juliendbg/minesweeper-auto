@@ -61,9 +61,9 @@ class MinesweeperGui(object):
                 height = self.game.height
                 mine_count = self.game.mine_count
             else:
-                width = width or 24
-                height = height or 24
-                mine_count = mine_count or 99
+                width = width or 10
+                height = height or 10
+                mine_count = mine_count or 10
 
         if self.canvas:
             self.canvas.grid_forget()
