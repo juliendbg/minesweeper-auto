@@ -1,10 +1,10 @@
-import copy
 import itertools
 from math import floor
 from random import shuffle
 from time import time
 from tkinter import Tk, Checkbutton, IntVar, NW, Frame, Label
 
+from backtrack import backtrack
 from gui import MinesweeperGui
 
 DEFAULT_AUTO_FLAG = 0
@@ -139,7 +139,7 @@ class MinesweeperAi(object):
         solutions = []  # array of sets of cells holding mines
         candidate = []
 
-        self.backtrack(solutions, constrained, candidate)
+        backtrack(solutions, constrained, candidate)
 
         changed = False
         if solutions:
@@ -166,61 +166,6 @@ class MinesweeperAi(object):
                 return True
 
         return changed
-
-    def backtrack(self, solutions, constrained_cells, candidate):
-        # print('Next candidate is: {}'.format(candidate))
-        if self.reject_candidate(constrained_cells, candidate):
-            return
-        if self.accept_candidate(constrained_cells, candidate):
-            # print('Accepting candidate!')
-            solutions.append(candidate)
-        extension = self.generate_first_extension(candidate)
-        while extension is not None:
-            self.backtrack(solutions, constrained_cells, extension)
-            extension = self.generate_next_extension(extension)
-
-    @staticmethod
-    def reject_candidate(constrained_cells, candidate):
-        if len(candidate) > len(constrained_cells):
-            return True
-
-        new_mines = {}
-        played_cells = {}
-        for index, is_mine in enumerate(candidate):
-            cell = constrained_cells[index]
-            for constraining_cell in cell.get_surroundings():
-                if not constraining_cell.is_revealed():
-                    continue
-                playable_cells = len([_cell for _cell in constraining_cell.get_surroundings() if _cell.is_playable()])
-                played_cells[constraining_cell] = played_cells.get(constraining_cell, 0) + 1
-                found_mines = len([_cell for _cell in constraining_cell.get_surroundings() if cell.is_flagged()])
-                missing_mines = constraining_cell.status() - found_mines
-                if missing_mines < 0:
-                    return True
-                new_mines[constraining_cell] = new_mines.get(constraining_cell, 0) + is_mine
-                if new_mines[constraining_cell] > missing_mines:
-                    return True
-                if played_cells[constraining_cell] == playable_cells and new_mines[constraining_cell] < missing_mines:
-                    return True
-        return False
-
-    @staticmethod
-    def accept_candidate(constrained_cells, candidate):
-        return len(candidate) == len(constrained_cells)
-
-    @staticmethod
-    def generate_first_extension(candidate):
-        next_candidate = copy.copy(candidate)
-        next_candidate.append(0)
-        return next_candidate
-
-    @staticmethod
-    def generate_next_extension(candidate):
-        if candidate[-1] == 1:
-            return None
-        next_candidate = copy.copy(candidate)
-        next_candidate[-1] = 1
-        return next_candidate
 
 
 if __name__ == '__main__':
