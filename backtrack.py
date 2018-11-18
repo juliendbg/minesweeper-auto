@@ -16,25 +16,49 @@ def reject_candidate(constrained_cells, candidate):
     if len(candidate) > len(constrained_cells):
         return True
 
-    new_mines = {}
+    added_mines = {}
     played_cells = {}
+
     for index, is_mine in enumerate(candidate):
         cell = constrained_cells[index]
         for constraining_cell in cell.get_surroundings():
             if not constraining_cell.is_revealed():
                 continue
-            playable_cells = len([_cell for _cell in constraining_cell.get_surroundings() if _cell.is_playable()])
+            if is_mine and has_all_its_mines(constraining_cell, added_mines.get(constraining_cell, 0)):
+                return True
+            if not is_mine and needs_a_mine(constraining_cell,
+                                            added_mines.get(constraining_cell, 0),
+                                            played_cells.get(constraining_cell, 0)):
+                return True
+
+            added_mines[constraining_cell] = added_mines.get(constraining_cell, 0) + is_mine
             played_cells[constraining_cell] = played_cells.get(constraining_cell, 0) + 1
-            found_mines = len([_cell for _cell in constraining_cell.get_surroundings() if cell.is_flagged()])
-            missing_mines = constraining_cell.status() - found_mines
-            if missing_mines < 0:
-                return True
-            new_mines[constraining_cell] = new_mines.get(constraining_cell, 0) + is_mine
-            if new_mines[constraining_cell] > missing_mines:
-                return True
-            if played_cells[constraining_cell] == playable_cells and new_mines[constraining_cell] < missing_mines:
-                return True
+
     return False
+
+
+def has_all_its_mines(cell, added_mines=0):
+    if not cell.is_revealed():
+        raise Exception('Unable to check if hidden cell has all its mines')
+
+    adjacent_mines = cell.status()
+    current_flags = len([_cell for _cell in cell.get_surroundings() if _cell.is_flagged()])
+
+    return current_flags + added_mines == adjacent_mines
+
+
+def needs_a_mine(cell, added_mines=0, played_cells=0):
+    if not cell.is_revealed():
+        raise Exception('Unable to check if hidden cell has all its mines')
+
+    adjacent_mines = cell.status()
+    current_flags = len([_cell for _cell in cell.get_surroundings() if _cell.is_flagged()])
+
+    hidden_cells = len([_cell for _cell in cell.get_surroundings() if _cell.is_playable()])
+
+    missing_mines = adjacent_mines - current_flags - added_mines
+
+    return missing_mines == hidden_cells - played_cells
 
 
 def accept_candidate(constrained_cells, candidate):

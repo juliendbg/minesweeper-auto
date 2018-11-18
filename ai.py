@@ -7,8 +7,8 @@ from tkinter import Tk, Checkbutton, IntVar, NW, Frame, Label
 from backtrack import backtrack
 from gui import MinesweeperGui
 
-DEFAULT_AUTO_FLAG = 0
-DEFAULT_AUTO_REVEAL = 0
+DEFAULT_AUTO_FLAG = 1
+DEFAULT_AUTO_REVEAL = 1
 DEFAULT_AUTO_CONSTRAINT = 0
 DEFAULT_RANDOM_REVEAL = 0
 
@@ -35,6 +35,9 @@ class MinesweeperAi(object):
         self.game = None
         self.board = None
         self.end_ts = floor(time() * 1000)
+        self.backtracking_count = 0
+        self.random_hit_count = 0
+        self.is_done = False
 
     def run(self):
         start_ts = floor(time() * 1000)
@@ -45,13 +48,18 @@ class MinesweeperAi(object):
                 print('Game has changed!')
             self.game = self.gui.game
             self.board = self.gui.game.board
+            self.is_done = False
 
         if self.gui.game.board != self.board:
             if self.board:
                 print('Board has changed!')
             self.board = self.gui.game.board
+            self.is_done = False
 
         if self.game.is_won() or self.game.is_lost():
+            if not self.is_done:
+                print('backtracking: {}, random: {}'.format(self.backtracking_count, self.random_hit_count))
+                self.is_done = True
             self.root.after(1000, self.run)
             return
 
@@ -66,12 +74,15 @@ class MinesweeperAi(object):
             step = 'reveal'
 
         if self.auto_constraints.get() and not changed:
-            self.ai_status['text'] = 'AI is resolving'
             changed = self.resolve_constraints()
+            if changed:
+                self.backtracking_count += 1
             step = 'random'
 
         if self.random_reveal.get() and not changed:
             self.random_guess()
+            self.random_hit_count += 1
+
             step = 'random'
 
         self.end_ts = floor(time() * 1000)
@@ -80,10 +91,10 @@ class MinesweeperAi(object):
 
         if changed:
             self.ai_status['text'] = 'AI is working'
-            next_in = max(10 - elapsed, 1)
+            next_in = 10
         else:
             self.ai_status['text'] = 'AI is idle'
-            next_in = max(100 - elapsed, 1)
+            next_in = 100
         self.root.after(next_in, self.run)
 
     def random_guess(self):
@@ -143,8 +154,8 @@ class MinesweeperAi(object):
 
         changed = False
         if solutions:
-            print('Found {} solutions'.format(len(solutions)))
-            print('Solutions: {}'.format(solutions))
+            # print('Found {} solutions'.format(len(solutions)))
+            # print('Solutions: {}'.format(solutions))
             for cell_index in range(len(constrained) - 1):
                 proposed_value = solutions[0][cell_index]
                 is_unanimous = True
