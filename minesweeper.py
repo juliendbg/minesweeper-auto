@@ -2,6 +2,8 @@ import random
 from enum import Enum
 from math import floor
 
+from core import get_surroundings
+
 
 class Cell(object):
     class Status(Enum):
@@ -45,14 +47,7 @@ class Cell(object):
         return any(cell.revealed and cell.adjacent_mines == 0 and not cell.has_mine for cell in surroundings)
 
     def get_surroundings(self):
-        x = self.x
-        y = self.y
-        coords = [(x - 1, y - 1), (x, y - 1), (x + 1, y - 1),
-                  (x - 1, y), (x + 1, y),
-                  (x - 1, y + 1), (x, y + 1), (x + 1, y + 1)]
-        cells = [self.game.get_cell(_x, _y)
-                 for _x, _y in coords
-                 if 0 <= _x < self.game.width and 0 <= _y < self.game.height]
+        cells = get_surroundings(self.x, self.y, self.game)
         return cells
 
     def status(self):

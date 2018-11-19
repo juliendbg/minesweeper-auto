@@ -141,40 +141,61 @@ class MinesweeperAi(object):
             for candidate in itertools.combinations(constrained_cells, mine_count):
                 yield list(candidate)
 
+    @staticmethod
+    def is_in_local_constraint(cell, local_constraint):
+        for _cell in local_constraint:
+            if set(cell.get_surroundings()).intersection(set(_cell.get_surroundings())):
+                return True
+        return False
+
     def resolve_constraints(self):
         # print('Starting backtrack solving...')
-        constrained = [_cell for _cell in self.board if _cell.is_constrained()]
+        constrained = set(_cell for _cell in self.board if _cell.is_constrained())
         if not constrained:
             return False
 
-        solutions = []  # array of sets of cells holding mines
-        candidate = []
-
-        backtrack(solutions, constrained, candidate)
-
+        local_constraint_groups = []
         changed = False
-        if solutions:
-            # print('Found {} solutions'.format(len(solutions)))
-            # print('Solutions: {}'.format(solutions))
-            for cell_index in range(len(constrained) - 1):
-                proposed_value = solutions[0][cell_index]
-                is_unanimous = True
-                for solution_index in range(1, len(solutions)):
-                    if proposed_value != solutions[solution_index][cell_index]:
-                        is_unanimous = False
-                        break
 
-                if not is_unanimous:
-                    continue
+        while len(constrained) > 0:
+            local_group = {constrained.pop()}
+            for _cell in constrained:
+                if self.is_in_local_constraint(_cell, local_group):
+                    local_group.add(_cell)
+            constrained = constrained.difference(local_group)
+            local_constraint_groups.append(local_group)
 
-                unanimous_cell = constrained[cell_index]
-                unanimous_cell_is_mined = solutions[0][cell_index]
-                if unanimous_cell_is_mined:
-                    self.gui.flag(unanimous_cell.x, unanimous_cell.y)
-                else:
-                    self.gui.reveal(unanimous_cell.x, unanimous_cell.y)
-                changed = True
-                return True
+        local_constraint_groups = sorted(local_constraint_groups, key=lambda x: len(x))
+        # print('Found {} local constraint groups'.format(len(local_constraint_groups)))
+
+        while local_constraint_groups:
+            solutions = []
+            candidate = []
+            constrained = list(local_constraint_groups.pop())
+            backtrack(solutions, constrained, candidate)
+
+            if solutions:
+                # print('Found {} solutions'.format(len(solutions)))
+                # print('Solutions: {}'.format(solutions))
+                for cell_index in range(len(constrained)):
+                    proposed_value = solutions[0][cell_index]
+                    is_unanimous = True
+                    for solution_index in range(1, len(solutions)):
+                        if proposed_value != solutions[solution_index][cell_index]:
+                            is_unanimous = False
+                            break
+
+                    if not is_unanimous:
+                        continue
+
+                    unanimous_cell = constrained[cell_index]
+                    unanimous_cell_is_mined = solutions[0][cell_index]
+                    if unanimous_cell_is_mined:
+                        self.gui.flag(unanimous_cell.x, unanimous_cell.y)
+                    else:
+                        self.gui.reveal(unanimous_cell.x, unanimous_cell.y)
+                    changed = True
+                    return True
 
         return changed
 
