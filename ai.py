@@ -41,6 +41,7 @@ class MinesweeperAi(object):
         self.end_ts = floor(time() * 1000)
         self.backtracking_count = 0
         self.random_hit_count = 0
+        self.pending_hit_count = 0
         self.is_done = False
 
         self.pending_mines = set()
@@ -55,7 +56,7 @@ class MinesweeperAi(object):
         if self.handle_wins():
             return
 
-        changed = False
+        changed = self.handle_pending_hits()
 
         if self.auto_flag.get() and not changed:
             changed = self.flag_obvious_spots()
@@ -102,10 +103,28 @@ class MinesweeperAi(object):
     def handle_wins(self):
         if self.game.is_won() or self.game.is_lost():
             if not self.is_done:
-                print('backtracking: {}, random: {}'.format(self.backtracking_count, self.random_hit_count))
+                print('pending: {}, backtracking: {}, random: {}'.format(
+                    self.pending_hit_count, self.backtracking_count, self.random_hit_count))
                 self.is_done = True
             self.root.after(1000, self.run)
             return True
+        return False
+
+    def handle_pending_hits(self):
+        while self.pending_mines:
+            cell = self.pending_mines.pop()
+            if not cell.is_flagged():
+                self.gui.flag(cell.x, cell.y)
+                self.pending_hit_count += 1
+                return True
+
+        while self.pending_reveals:
+            cell = self.pending_reveals.pop()
+            if not cell.is_revealed():
+                self.gui.reveal(cell.x, cell.y)
+                self.pending_hit_count += 1
+                return True
+
         return False
 
     def random_guess(self):
@@ -186,11 +205,14 @@ class MinesweeperAi(object):
                     unanimous_cell = constrained[cell_index]
                     unanimous_cell_is_mined = solutions[0][cell_index]
                     if unanimous_cell_is_mined:
-                        self.gui.flag(unanimous_cell.x, unanimous_cell.y)
+                        self.pending_mines.add(unanimous_cell)
                     else:
-                        self.gui.reveal(unanimous_cell.x, unanimous_cell.y)
-                    changed = True
-                    return True
+                        self.pending_reveals.add(unanimous_cell)
+
+            # Handle one hit
+            changed = self.handle_pending_hits()
+            if changed:
+                return True
 
         return changed
 
