@@ -86,7 +86,7 @@ class MinesweeperAi(object):
 
         if changed:
             self.ai_status['text'] = 'AI is working'
-            next_in = 10
+            next_in = 1
         else:
             self.ai_status['text'] = 'AI is idle'
             next_in = 100
@@ -147,8 +147,12 @@ class MinesweeperAi(object):
 
             if cell.status() > len(flagged) and len(playable) == cell.status() - len(flagged):
                 for _cell in playable:
-                    self.gui.flag(_cell.x, _cell.y)
-                    return True
+                    self.pending_mines.add(_cell)
+
+        # Handle one hit
+        changed = self.handle_pending_hits()
+        if changed:
+            return True
 
         return False
 
@@ -163,8 +167,13 @@ class MinesweeperAi(object):
 
             if cell.status() == len(flagged):
                 for _cell in playable:
-                    self.gui.reveal(_cell.x, _cell.y)
-                    return True
+                    self.pending_reveals.add(_cell)
+
+        # Handle one hit
+        changed = self.handle_pending_hits()
+        if changed:
+            return True
+
         return False
 
     @staticmethod
@@ -176,7 +185,9 @@ class MinesweeperAi(object):
     @staticmethod
     def is_in_local_constraint(cell, local_constraint):
         for _cell in local_constraint:
-            if set(cell.get_surroundings()).intersection(set(_cell.get_surroundings())):
+            cell_revealed_surroundings = [c for c in cell.get_surroundings() if c.is_revealed()]
+            _cell_revealed_surroundings = [c for c in _cell.get_surroundings() if c.is_revealed()]
+            if set(cell_revealed_surroundings).intersection(set(_cell_revealed_surroundings)):
                 return True
         return False
 
