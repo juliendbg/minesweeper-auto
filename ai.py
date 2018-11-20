@@ -160,8 +160,9 @@ class MinesweeperAi(object):
             return False
 
         for cell in constrained:
-            cell.updated = True
-            self.gui.canvas.itemconfigure(cell.object_ids[0], fill=CONSTRAINED_COLOR)
+            if self.gui.canvas.itemcget(cell.object_ids[0], 'fill') != CONSTRAINED_COLOR:
+                cell.updated = True
+                self.gui.canvas.itemconfigure(cell.object_ids[0], fill=CONSTRAINED_COLOR)
         self.gui.root.update()
 
         local_constraint_groups = []
