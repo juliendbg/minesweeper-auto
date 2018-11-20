@@ -1,3 +1,4 @@
+import copy
 import itertools
 from math import floor
 from random import shuffle
@@ -11,6 +12,8 @@ DEFAULT_AUTO_FLAG = 1
 DEFAULT_AUTO_REVEAL = 1
 DEFAULT_AUTO_CONSTRAINT = 0
 DEFAULT_RANDOM_REVEAL = 0
+
+SHUFFLE = False
 
 SHOW_CONSTRAINED = True
 CONSTRAINED_COLOR = '#FFFFCC'
@@ -136,7 +139,8 @@ class MinesweeperAi(object):
 
     def flag_obvious_spots(self):
         board = [_cell for _cell in self.board if _cell.is_revealed() and _cell.status() != 0]
-        shuffle(board)
+        if SHUFFLE:
+            shuffle(board)
         for cell in board:
             playable = [_cell for _cell in cell.get_surroundings() if _cell.is_playable()]
             flagged = [_cell for _cell in cell.get_surroundings() if _cell.is_flagged()]
@@ -151,7 +155,8 @@ class MinesweeperAi(object):
     def reveal_obvious_spots(self):
         # print('Revealing obvious spots')
         board = [_cell for _cell in self.board if _cell.is_revealed() and _cell.status() != 0]
-        shuffle(board)
+        if SHUFFLE:
+            shuffle(board)
         for cell in board:
             playable = [_cell for _cell in cell.get_surroundings() if _cell.is_playable()]
             flagged = [_cell for _cell in cell.get_surroundings() if _cell.is_flagged()]
@@ -232,16 +237,22 @@ class MinesweeperAi(object):
         if previous_constraints == constrained:
             return None
 
+        setattr(self, 'previous_constraints', copy.copy(constrained))
+
         if SHOW_CONSTRAINED:
             self.show_constrained(constrained)
 
         local_constraint_groups = []
         while len(constrained) > 0:
             local_group = {constrained.pop()}
-            for _cell in constrained:
-                if self.is_in_local_constraint(_cell, local_group):
-                    local_group.add(_cell)
-            constrained = constrained.difference(local_group)
+            added = True
+            while added:
+                added = False
+                for _cell in constrained:
+                    if self.is_in_local_constraint(_cell, local_group):
+                        local_group.add(_cell)
+                        added = True
+                constrained = constrained.difference(local_group)
             local_constraint_groups.append(local_group)
 
         local_constraint_groups = sorted(local_constraint_groups, key=lambda x: len(x))
