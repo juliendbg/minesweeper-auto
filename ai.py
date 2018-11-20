@@ -12,6 +12,9 @@ DEFAULT_AUTO_REVEAL = 1
 DEFAULT_AUTO_CONSTRAINT = 0
 DEFAULT_RANDOM_REVEAL = 0
 
+CONSTRAINED_COLOR = '#FFFFCC'
+WORKING_COLOR = '#FFFF00'
+
 
 class MinesweeperAi(object):
     def __init__(self, master):
@@ -74,6 +77,8 @@ class MinesweeperAi(object):
             step = 'reveal'
 
         if self.auto_constraints.get() and not changed:
+            self.ai_status['text'] = 'AI is backtracking'
+            self.gui.root.update()
             changed = self.resolve_constraints()
             if changed:
                 self.backtracking_count += 1
@@ -154,6 +159,11 @@ class MinesweeperAi(object):
         if not constrained:
             return False
 
+        for cell in constrained:
+            cell.updated = True
+            self.gui.canvas.itemconfigure(cell.object_ids[0], fill=CONSTRAINED_COLOR)
+        self.gui.root.update()
+
         local_constraint_groups = []
         changed = False
 
@@ -172,6 +182,10 @@ class MinesweeperAi(object):
             solutions = []
             candidate = []
             constrained = list(local_constraint_groups.pop())
+            # for cell in constrained:
+            #     cell.updated = True
+            #     self.gui.canvas.itemconfigure(cell.object_ids[0], fill=WORKING_COLOR)
+            # self.gui.root.update()
             backtrack(solutions, constrained, candidate)
 
             if solutions:
