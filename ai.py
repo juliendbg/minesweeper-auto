@@ -12,7 +12,7 @@ DEFAULT_AUTO_REVEAL = 1
 DEFAULT_AUTO_CONSTRAINT = 0
 DEFAULT_RANDOM_REVEAL = 0
 
-SHOW_CONSTRAINED = False
+SHOW_CONSTRAINED = True
 CONSTRAINED_COLOR = '#FFFFCC'
 WORKING_COLOR = '#FFFF00'
 
@@ -178,7 +178,8 @@ class MinesweeperAi(object):
     def resolve_constraints(self):
         local_constraint_groups = self.build_local_constraint_groups()
 
-        changed = False
+        if not local_constraint_groups:
+            return False
 
         while local_constraint_groups:
             solutions = []
@@ -214,7 +215,7 @@ class MinesweeperAi(object):
             if changed:
                 return True
 
-        return changed
+        return False
 
     def show_constrained(self, constrained, color=CONSTRAINED_COLOR):
         for cell in constrained:
@@ -225,6 +226,11 @@ class MinesweeperAi(object):
 
     def build_local_constraint_groups(self):
         constrained = set(_cell for _cell in self.board if _cell.is_constrained())
+
+        previous_constraints = getattr(self, 'previous_constraints', None)
+
+        if previous_constraints == constrained:
+            return None
 
         if SHOW_CONSTRAINED:
             self.show_constrained(constrained)
