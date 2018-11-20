@@ -47,8 +47,9 @@ class Cell(object):
         return any(cell.revealed and cell.adjacent_mines == 0 and not cell.has_mine for cell in surroundings)
 
     def get_surroundings(self):
-        cells = get_surroundings(self.x, self.y, self.game)
-        return cells
+        if not hasattr(self, '_surroundings'):
+            self._surroundings = get_surroundings(self.x, self.y, self.game)
+        return self._surroundings
 
     def status(self):
         if self.flagged:
