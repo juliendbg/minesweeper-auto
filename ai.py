@@ -12,6 +12,7 @@ DEFAULT_AUTO_REVEAL = 1
 DEFAULT_AUTO_CONSTRAINT = 0
 DEFAULT_RANDOM_REVEAL = 0
 
+SHOW_CONSTRAINED = False
 CONSTRAINED_COLOR = '#FFFFCC'
 WORKING_COLOR = '#FFFF00'
 
@@ -42,28 +43,16 @@ class MinesweeperAi(object):
         self.random_hit_count = 0
         self.is_done = False
 
+        self.pending_mines = set()
+        self.pending_reveals = set()
+
     def run(self):
         start_ts = floor(time() * 1000)
         # print("Time since last frame: {} ms".format(start_ts - self.end_ts))
 
-        if self.gui.game != self.game:
-            if self.game:
-                print('Game has changed!')
-            self.game = self.gui.game
-            self.board = self.gui.game.board
-            self.is_done = False
+        self.handle_new_games()
 
-        if self.gui.game.board != self.board:
-            if self.board:
-                print('Board has changed!')
-            self.board = self.gui.game.board
-            self.is_done = False
-
-        if self.game.is_won() or self.game.is_lost():
-            if not self.is_done:
-                print('backtracking: {}, random: {}'.format(self.backtracking_count, self.random_hit_count))
-                self.is_done = True
-            self.root.after(1000, self.run)
+        if self.handle_wins():
             return
 
         changed = False
@@ -77,8 +66,6 @@ class MinesweeperAi(object):
             step = 'reveal'
 
         if self.auto_constraints.get() and not changed:
-            self.ai_status['text'] = 'AI is backtracking'
-            self.gui.root.update()
             changed = self.resolve_constraints()
             if changed:
                 self.backtracking_count += 1
@@ -87,7 +74,6 @@ class MinesweeperAi(object):
         if self.random_reveal.get() and not changed:
             self.random_guess()
             self.random_hit_count += 1
-
             step = 'random'
 
         self.end_ts = floor(time() * 1000)
@@ -102,6 +88,26 @@ class MinesweeperAi(object):
             next_in = 100
         self.root.after(next_in, self.run)
 
+    def handle_new_games(self):
+        if self.gui.game != self.game:
+            if self.game:
+                print('New game started!')
+            self.game = self.gui.game
+            self.board = self.gui.game.board
+            self.is_done = False
+
+        if self.gui.game.board != self.board:
+            raise Exception('Board has changed during a game')
+
+    def handle_wins(self):
+        if self.game.is_won() or self.game.is_lost():
+            if not self.is_done:
+                print('backtracking: {}, random: {}'.format(self.backtracking_count, self.random_hit_count))
+                self.is_done = True
+            self.root.after(1000, self.run)
+            return True
+        return False
+
     def random_guess(self):
         playable = [_cell for _cell in self.board if _cell.is_playable()]
         shuffle(playable)
@@ -110,7 +116,6 @@ class MinesweeperAi(object):
         self.gui.reveal(cell.x, cell.y)
 
     def flag_obvious_spots(self):
-        # print('Flagging obvious spots')
         board = [_cell for _cell in self.board if _cell.is_revealed() and _cell.status() != 0]
         shuffle(board)
         for cell in board:
@@ -118,7 +123,6 @@ class MinesweeperAi(object):
             flagged = [_cell for _cell in cell.get_surroundings() if _cell.is_flagged()]
 
             if cell.status() > len(flagged) and len(playable) == cell.status() - len(flagged):
-                # print('Working on cell: {} ({})'.format(cell, len(playable)))
                 for _cell in playable:
                     self.gui.flag(_cell.x, _cell.y)
                     return True
@@ -134,7 +138,6 @@ class MinesweeperAi(object):
             flagged = [_cell for _cell in cell.get_surroundings() if _cell.is_flagged()]
 
             if cell.status() == len(flagged):
-                # print('Working on cell: {} ({})'.format(cell, len(playable)))
                 for _cell in playable:
                     self.gui.reveal(_cell.x, _cell.y)
                     return True
@@ -154,44 +157,21 @@ class MinesweeperAi(object):
         return False
 
     def resolve_constraints(self):
-        # print('Starting backtrack solving...')
-        constrained = set(_cell for _cell in self.board if _cell.is_constrained())
-        if not constrained:
-            return False
+        local_constraint_groups = self.build_local_constraint_groups()
 
-        for cell in constrained:
-            if self.gui.canvas.itemcget(cell.object_ids[0], 'fill') != CONSTRAINED_COLOR:
-                cell.updated = True
-                self.gui.canvas.itemconfigure(cell.object_ids[0], fill=CONSTRAINED_COLOR)
-        self.gui.root.update()
-
-        local_constraint_groups = []
         changed = False
-
-        while len(constrained) > 0:
-            local_group = {constrained.pop()}
-            for _cell in constrained:
-                if self.is_in_local_constraint(_cell, local_group):
-                    local_group.add(_cell)
-            constrained = constrained.difference(local_group)
-            local_constraint_groups.append(local_group)
-
-        local_constraint_groups = sorted(local_constraint_groups, key=lambda x: len(x))
-        # print('Found {} local constraint groups'.format(len(local_constraint_groups)))
 
         while local_constraint_groups:
             solutions = []
             candidate = []
             constrained = list(local_constraint_groups.pop())
-            # for cell in constrained:
-            #     cell.updated = True
-            #     self.gui.canvas.itemconfigure(cell.object_ids[0], fill=WORKING_COLOR)
-            # self.gui.root.update()
+
+            if SHOW_CONSTRAINED:
+                self.show_constrained(constrained, WORKING_COLOR)
+
             backtrack(solutions, constrained, candidate)
 
             if solutions:
-                # print('Found {} solutions'.format(len(solutions)))
-                # print('Solutions: {}'.format(solutions))
                 for cell_index in range(len(constrained)):
                     proposed_value = solutions[0][cell_index]
                     is_unanimous = True
@@ -213,6 +193,32 @@ class MinesweeperAi(object):
                     return True
 
         return changed
+
+    def show_constrained(self, constrained, color=CONSTRAINED_COLOR):
+        for cell in constrained:
+            if self.gui.canvas.itemcget(cell.object_ids[0], 'fill') != color:
+                cell.updated = True
+                self.gui.canvas.itemconfigure(cell.object_ids[0], fill=color)
+        self.gui.root.update()
+
+    def build_local_constraint_groups(self):
+        constrained = set(_cell for _cell in self.board if _cell.is_constrained())
+
+        if SHOW_CONSTRAINED:
+            self.show_constrained(constrained)
+
+        local_constraint_groups = []
+        while len(constrained) > 0:
+            local_group = {constrained.pop()}
+            for _cell in constrained:
+                if self.is_in_local_constraint(_cell, local_group):
+                    local_group.add(_cell)
+            constrained = constrained.difference(local_group)
+            local_constraint_groups.append(local_group)
+
+        local_constraint_groups = sorted(local_constraint_groups, key=lambda x: len(x))
+
+        return local_constraint_groups
 
 
 if __name__ == '__main__':
