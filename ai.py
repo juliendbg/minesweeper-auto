@@ -208,23 +208,12 @@ class MinesweeperAi(object):
             backtrack(solutions, constrained, candidate)
 
             if solutions:
+                density_vector = list(map(sum, zip(*solutions)))
                 for cell_index in range(len(constrained)):
-                    proposed_value = solutions[0][cell_index]
-                    is_unanimous = True
-                    for solution_index in range(1, len(solutions)):
-                        if proposed_value != solutions[solution_index][cell_index]:
-                            is_unanimous = False
-                            break
-
-                    if not is_unanimous:
-                        continue
-
-                    unanimous_cell = constrained[cell_index]
-                    unanimous_cell_is_mined = solutions[0][cell_index]
-                    if unanimous_cell_is_mined:
-                        self.pending_mines.add(unanimous_cell)
-                    else:
-                        self.pending_reveals.add(unanimous_cell)
+                    if density_vector[cell_index] == len(solutions):
+                        self.pending_mines.add(constrained[cell_index])
+                    elif density_vector[cell_index] == 0:
+                        self.pending_reveals.add(constrained[cell_index])
 
             # Handle one hit
             changed = self.handle_pending_hits()

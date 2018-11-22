@@ -1,4 +1,4 @@
-def get_surroundings(int x, int y, game):
+def get_surroundings(x, y, game):
     coords = [(x - 1, y - 1), (x, y - 1), (x + 1, y - 1),
               (x - 1, y), (x + 1, y),
               (x - 1, y + 1), (x, y + 1), (x + 1, y + 1)]
@@ -7,5 +7,6 @@ def get_surroundings(int x, int y, game):
              if 0 <= _x < game.width and 0 <= _y < game.height]
     return cells
 
-def get_cell(int x, int y, game):
+
+def get_cell(x, y, game):
     return game.board[y * game.width + x]
