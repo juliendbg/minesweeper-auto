@@ -266,7 +266,7 @@ class MinesweeperAi(object):
                 constrained = constrained.difference(local_group)
             local_constraint_groups.append(local_group)
 
-        local_constraint_groups = sorted(local_constraint_groups, key=lambda x: len(x))
+        local_constraint_groups = sorted(local_constraint_groups, key=lambda x: len(x), reverse=True)
 
         return local_constraint_groups
 
