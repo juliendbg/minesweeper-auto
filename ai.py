@@ -1,5 +1,6 @@
 import copy
 import itertools
+import math
 from math import floor
 from random import shuffle
 from time import time
@@ -18,6 +19,8 @@ SHUFFLE = False
 SHOW_CONSTRAINED = True
 CONSTRAINED_COLOR = '#FFFFCC'
 WORKING_COLOR = '#FFFF00'
+
+CHUNK_SIZE = 12
 
 
 class MinesweeperAi(object):
@@ -205,6 +208,7 @@ class MinesweeperAi(object):
             if SHOW_CONSTRAINED:
                 self.show_constrained(constrained, WORKING_COLOR)
 
+            print('group length: {}'.format(len(constrained)))
             backtrack(solutions, constrained, candidate)
 
             if solutions:
@@ -253,7 +257,14 @@ class MinesweeperAi(object):
                         local_group.add(_cell)
                         added = True
                 constrained = constrained.difference(local_group)
-            local_constraint_groups.append(local_group)
+
+            local_group = list(local_group)
+            group_len = len(local_group)
+            if group_len > CHUNK_SIZE:
+                for chunk_nb in range(math.floor(group_len / CHUNK_SIZE)):
+                    local_constraint_groups.append(local_group[CHUNK_SIZE * chunk_nb:CHUNK_SIZE * (chunk_nb + 1)])
+            else:
+                local_constraint_groups.append(local_group)
 
         local_constraint_groups = sorted(local_constraint_groups, key=lambda x: len(x), reverse=True)
 
