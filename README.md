@@ -18,9 +18,19 @@ The repository includes:
 python gui.py
 ```
 
+Different difficulty levels can be selected from the menu bar:
+
+- Easy: 10x10, 10 mines
+- Medium: 16x16, 40 mines
+- Hard: 24x24, 99 mines
+- Extreme: 75x50, 650 mines
+
+Controls:
+
 - Click on the title to restart,
 - right-click a hidden cell to flag it,
 - click on a revealed square to auto-reveal adjacent cells.
+
 
 ### AI interface
 
